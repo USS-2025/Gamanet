@@ -1,0 +1,9 @@
+﻿<Application x:Class="Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+         
+    </Application.Resources>
+</Application>

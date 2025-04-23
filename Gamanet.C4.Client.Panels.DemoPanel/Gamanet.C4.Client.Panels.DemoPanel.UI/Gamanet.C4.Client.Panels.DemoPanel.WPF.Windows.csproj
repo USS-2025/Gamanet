@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>res\ico\CSV.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="res\Icons\**" />
+    <EmbeddedResource Remove="res\Icons\**" />
+    <None Remove="res\Icons\**" />
+    <Page Remove="res\Icons\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="res\ico\CSV.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Gamanet.C4.Client.Panels.DemoPanel.DataSources\Gamanet.C4.Client.Panels.DemoPanel.DataSources.csproj" />
+    <ProjectReference Include="..\Gamanet.C4.Client.Panels.DemoPanel.Entities\Gamanet.C4.Client.Panels.DemoPanel.Entities.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Assets\TestData\PersonsDemo.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\TestData\PersonsDemo.xlsx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

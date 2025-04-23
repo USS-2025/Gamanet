@@ -1,0 +1,18 @@
+﻿<Window x:Class="Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows"
+        xmlns:panel="clr-namespace:Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance d:Type={x:Type panel:MainPanelViewModel}, IsDesignTimeCreatable=True}"
+        Title="MainWindow" Height="450" Width="800">
+    <Window.Resources>
+        <panel:MainPanelViewModel x:Key="MainPanelVM" />
+    </Window.Resources>
+    <Grid>
+        <panel:MainPanel x:Name="MainPanel" DataContext="{StaticResource MainPanelVM}"
+              HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+    </Grid>
+</Window>

@@ -1,0 +1,80 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gamanet.C4.Client.Panels.DemoPanel.Services", "Gamanet.C4.Client.Panels.DemoPanel.BusinessLogic\Gamanet.C4.Client.Panels.DemoPanel.Services.csproj", "{90262A06-2D14-4138-92F4-F1AB5D13356D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BusinessLogic", "BusinessLogic", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UI", "UI", "{20409541-40E0-4E73-BD98-189EA28989D6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gamanet.C4.Client.Panels.DemoPanel.Entities", "Gamanet.C4.Client.Panels.DemoPanel.Entities\Gamanet.C4.Client.Panels.DemoPanel.Entities.csproj", "{344370D6-DBCF-43DB-866C-8E2DBCA18AD4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gamanet.C4.Client.Panels.DemoPanel.Handlers", "Gamanet.C4.Client.Panels.DemoPanel.Handlers\Gamanet.C4.Client.Panels.DemoPanel.Handlers.csproj", "{E3A57C58-F73F-40F8-A9D0-7FBB9E9C8D62}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gamanet.C4.Client.Panels.DemoPanel.Hosters", "Gamanet.C4.Client.Panels.DemoPanel.Hosters\Gamanet.C4.Client.Panels.DemoPanel.Hosters.csproj", "{EC8E7C5C-7BE6-4D95-9F2F-33BF995301F2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gamanet.C4.Client.Panels.DemoPanel.DataSources", "Gamanet.C4.Client.Panels.DemoPanel.DataSources\Gamanet.C4.Client.Panels.DemoPanel.DataSources.csproj", "{65A44499-29E0-4F61-8A00-D630F354A1A6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows", "Gamanet.C4.Client.Panels.DemoPanel.UI\Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.csproj", "{A6BBEB44-BD3F-9031-B7A1-FC78AAC3FEFA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gamanet.C4.Client.Utils", "Gamanet.C4.Client.Utils\Gamanet.C4.Client.Utils.csproj", "{C273F08A-AFFE-4308-9AEE-FAF64076F6D2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gamanet.C4.Client.Panels.DemoPanel.Repositories", "Gamanet.C4.Client.Panels.DemoPanel.Repositories\Gamanet.C4.Client.Panels.DemoPanel.Repositories.csproj", "{4F8AB62E-F638-7746-06C5-03320C6E44CE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{90262A06-2D14-4138-92F4-F1AB5D13356D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90262A06-2D14-4138-92F4-F1AB5D13356D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90262A06-2D14-4138-92F4-F1AB5D13356D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90262A06-2D14-4138-92F4-F1AB5D13356D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{344370D6-DBCF-43DB-866C-8E2DBCA18AD4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{344370D6-DBCF-43DB-866C-8E2DBCA18AD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{344370D6-DBCF-43DB-866C-8E2DBCA18AD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{344370D6-DBCF-43DB-866C-8E2DBCA18AD4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3A57C58-F73F-40F8-A9D0-7FBB9E9C8D62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3A57C58-F73F-40F8-A9D0-7FBB9E9C8D62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3A57C58-F73F-40F8-A9D0-7FBB9E9C8D62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3A57C58-F73F-40F8-A9D0-7FBB9E9C8D62}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC8E7C5C-7BE6-4D95-9F2F-33BF995301F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC8E7C5C-7BE6-4D95-9F2F-33BF995301F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC8E7C5C-7BE6-4D95-9F2F-33BF995301F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC8E7C5C-7BE6-4D95-9F2F-33BF995301F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65A44499-29E0-4F61-8A00-D630F354A1A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65A44499-29E0-4F61-8A00-D630F354A1A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65A44499-29E0-4F61-8A00-D630F354A1A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65A44499-29E0-4F61-8A00-D630F354A1A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6BBEB44-BD3F-9031-B7A1-FC78AAC3FEFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6BBEB44-BD3F-9031-B7A1-FC78AAC3FEFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6BBEB44-BD3F-9031-B7A1-FC78AAC3FEFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6BBEB44-BD3F-9031-B7A1-FC78AAC3FEFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C273F08A-AFFE-4308-9AEE-FAF64076F6D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C273F08A-AFFE-4308-9AEE-FAF64076F6D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C273F08A-AFFE-4308-9AEE-FAF64076F6D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C273F08A-AFFE-4308-9AEE-FAF64076F6D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F8AB62E-F638-7746-06C5-03320C6E44CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F8AB62E-F638-7746-06C5-03320C6E44CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F8AB62E-F638-7746-06C5-03320C6E44CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F8AB62E-F638-7746-06C5-03320C6E44CE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{90262A06-2D14-4138-92F4-F1AB5D13356D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{344370D6-DBCF-43DB-866C-8E2DBCA18AD4} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{E3A57C58-F73F-40F8-A9D0-7FBB9E9C8D62} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{EC8E7C5C-7BE6-4D95-9F2F-33BF995301F2} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{65A44499-29E0-4F61-8A00-D630F354A1A6} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{A6BBEB44-BD3F-9031-B7A1-FC78AAC3FEFA} = {20409541-40E0-4E73-BD98-189EA28989D6}
+		{4F8AB62E-F638-7746-06C5-03320C6E44CE} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BE579C8F-CD14-4B63-9BC8-CBB8E8E8EA9A}
+	EndGlobalSection
+EndGlobal

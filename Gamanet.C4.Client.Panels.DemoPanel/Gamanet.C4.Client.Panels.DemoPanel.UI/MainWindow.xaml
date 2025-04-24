@@ -6,9 +6,10 @@
         xmlns:local="clr-namespace:Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows"
         xmlns:panel="clr-namespace:Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel"
         mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance d:Type={x:Type local:MainWindowViewModel}, IsDesignTimeCreatable=True}"       
         Title="CSV &amp; Excel Reader WPF App" Height="800" Width="1200"
         >
-        <!--d:DataContext="{d:DesignInstance d:Type={x:Type local:MainWindowViewModel}, IsDesignTimeCreatable=True}"-->
+
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="boolToVisConverter"/>
         <!-- Used for UserControl 'MainPanel' -->
@@ -20,25 +21,25 @@
 
             <!-- Read-only text boxes are perfect for selecting & copying text.
                 Visibility: Don't forget to collapse this text if nor error. -->
-            <!--<TextBox x:Name="TextBoxStatusText" IsReadOnly="True" DockPanel.Dock="Bottom"
+            <TextBox x:Name="TextBoxStatusText" IsReadOnly="True" DockPanel.Dock="Bottom"
                              Text="{Binding StatusText, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"
                      >
-            </TextBox>-->
+            </TextBox>
 
             <!-- Read-only text boxes are perfect for selecting & copying text-->
-            <!--<TextBox x:Name="TextBoxErrorText" Foreground="Red" FontSize="24" IsReadOnly="True" DockPanel.Dock="Bottom" Margin="5" 
+            <TextBox x:Name="TextBoxErrorText" Foreground="Red" FontSize="24" IsReadOnly="True" DockPanel.Dock="Bottom" Margin="5" 
                              Text="{Binding ErrorText, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"
                              Visibility="{Binding HasErrors, Converter={StaticResource boolToVisConverter}}"
                      >
-            </TextBox>-->
+            </TextBox>
 
-            <Border BorderBrush="Turquoise" BorderThickness="15" CornerRadius="15">
+            <Border BorderBrush="Turquoise" BorderThickness="5" CornerRadius="15">
                 <!-- UserControl 'MainPanel' -->
                 <!-- Set DataContext here already, if not, don't forget to set in source code,
                     or setting on UserControl itself ??? -->
                 <panel:MainPanel x:Name="MainPanel" DataContext="{StaticResource MainPanelViewModel}"
                         HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                   
+                     
                 </panel:MainPanel>
             </Border>
 

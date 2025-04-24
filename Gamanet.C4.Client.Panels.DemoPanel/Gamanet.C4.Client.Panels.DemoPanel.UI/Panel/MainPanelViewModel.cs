@@ -49,7 +49,7 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
 
         public ICollectionView? PersonsView { get; }
 
-        public int PersonsCount { get => this.Persons.Count;} 
+        //public int PersonsCount { get => this.Persons.Count; }
 
         private bool _canLoadData = true;
 
@@ -83,14 +83,19 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
             // Create view for filtering/sorting
             this.PersonsView = CollectionViewSource.GetDefaultView(this.Persons);
 
+            this.FillDesignData();
+        }
+
+        public void FillDesignData()
+        {
             // ToDo: Comment in if working
             //if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
-            {
-                this.ErrorText = "Design mode: Test-Error.";
 
-                var testPeopleForDesignMode = new List<PersonEntity>
-                    ( [
-                        new() { Name = "Test Person 1", Country = "Poland", Phone= "+48 123 456 789", Email = "testperson1@poczta.pl"},
+            this.ErrorText = "Design mode: Test-Error.";
+
+            var testPeopleForDesignMode = new List<PersonEntity>
+                ([
+                    new() { Name = "Test Person 1", Country = "Poland", Phone= "+48 123 456 789", Email = "testperson1@poczta.pl"},
                         new() { Name = "Test Person 2", Country = "Poland", Phone= "+48 456 789 123", Email = "testperson2@poczta.pl"},
                         new() { Name = "Test Person 3", Country = "Germany", Phone= "+49 789 123 456", Email = "Test: very_very_very_very_" +
                                                                                                        "very_very_very_very_" +
@@ -98,20 +103,22 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
                                                                                                        "very_very_very_very_" +
                                                                                                        "very_very_very_very_" +
                                                                                                        "long_email_address_testperson3@mail.de"},
-                    ]);
+                ]);
 
-                // Now for testing many items (scroll bar visibilities, limiting size of items control etc.)
-                for(int i = 4; i<100;i++)
+            // Now for testing many items (scroll bar visibilities, limiting size of items control etc.)
+            for (int i = 4; i < 100; i++)
+            {
+                testPeopleForDesignMode.Add(new()
                 {
-                    testPeopleForDesignMode.Add(new()
-                    { 
-                        Name= $"Test Person {i}", Country= $"Poland", Phone= $"012 345 {i:000}", Email= $"email.address{i:00}@mail.com"
-                    });
-                }
-
-                UpdatePeopleList(testPeopleForDesignMode);
-                this.CanLoadData = true;
+                    Name = $"Test Person {i}",
+                    Country = $"Poland",
+                    Phone = $"012 345 {i:000}",
+                    Email = $"email.address{i:00}@mail.com"
+                });
             }
+
+            UpdatePeopleList(testPeopleForDesignMode);
+            this.CanLoadData = true;
         }
 
         /// <summary>
@@ -138,7 +145,6 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
                 return;
             }
 
-#if USE_APP_HOSTING
             if (_fileDlgService != null)
             {
                 string initialFilePath = Path.Combine(Environment.CurrentDirectory, DEFAULT_CSV_FILEPATH_RELATIVE);
@@ -172,7 +178,6 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
                     Trace.TraceError($"Error on resolving service '{nameof(IExcelPersonDataSource)}'" +
                                     $" (Did you forget to register in Startup / Bootstrapper?): {ex}");
                 }
-#endif
             }
 
             // put to separate task for error evaluation
@@ -243,17 +248,16 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
         public void UpdatePeopleList(IEnumerable<PersonEntity> people)
         {
             this.CanLoadData = false;
-            // ToDo: Comment in if working
-            //this.PersonsView?.DeferRefresh();
+
             this.Countries.Clear();
             this.Persons.Clear();
-            OnPropertyChanged(nameof(this.PersonsCount));
 
             foreach (var person in people)
             {
                 this.Persons.Add(person);
             }
-            OnPropertyChanged(nameof(this.PersonsCount));
+
+            this.StatusText = $"{this}: Added {this.Persons.Count} people to collection.";
 
             // Don't forget leading separated value for no filtering (all countries)
             var countries = new string[] { Constants.FilterConstants.ALL_COUNTRIES }
@@ -267,6 +271,8 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
             {
                 this.Countries.Add(country);
             }
+
+            this.CanLoadData = true;
         }
 
         public void SortByNameToggle()
@@ -278,23 +284,28 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
 
             SortDescription? nameSorting = PersonsView.SortDescriptions.FirstOrDefault(s => s.PropertyName == nameof(PersonEntity.Name));
 
-            if (nameSorting.HasValue)
+            using (this.PersonsView?.DeferRefresh())
             {
-                // Remove only affected sorter but not any other since we are able to sort by multiple properties ".ThenBy(...)". 
-                /// <seealso cref="Enumerable.ThenByDescending{TSource, TKey}(IOrderedEnumerable{TSource}, Func{TSource, TKey}, IComparer{TKey}?)"/>
-                PersonsView.SortDescriptions.Remove(nameSorting.Value);
+                if (nameSorting.HasValue)
+                {
+                    // Remove only affected sorter but not any other since we are able to sort by multiple properties ".ThenBy(...)". 
+                    /// <seealso cref="Enumerable.ThenByDescending{TSource, TKey}(IOrderedEnumerable{TSource}, Func{TSource, TKey}, IComparer{TKey}?)"/>
+                    PersonsView?.SortDescriptions.Remove(nameSorting.Value);
+                }
+
+                if (nameSorting == null || nameSorting.GetValueOrDefault().Direction == ListSortDirection.Descending)
+                {
+                    // if never sorted or currently sorted descending, sort ascending
+                    PersonsView.SortDescriptions.Add(new SortDescription(nameof(PersonEntity.Name), ListSortDirection.Ascending));
+                }
+                else
+                {
+                    // if currently sorted ascending, sort descending
+                    PersonsView?.SortDescriptions.Add(new SortDescription(nameof(PersonEntity.Name), ListSortDirection.Descending));
+                }
             }
 
-            if (nameSorting == null || nameSorting.GetValueOrDefault().Direction == ListSortDirection.Descending)
-            {
-                // if never sorted or currently sorted descending, sort ascending
-                PersonsView.SortDescriptions.Add(new SortDescription(nameof(PersonEntity.Name), ListSortDirection.Ascending));
-            }
-            else
-            {
-                // if currently sorted ascending, sort descending
-                PersonsView.SortDescriptions.Add(new SortDescription(nameof(PersonEntity.Name), ListSortDirection.Descending));
-            }
+            this.PersonsView?.Refresh();
         }
 
         public void SortByCountryToggle()
@@ -306,41 +317,49 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
 
             SortDescription? countrySorting = PersonsView.SortDescriptions.FirstOrDefault(s => s.PropertyName == nameof(PersonEntity.Country));
 
-            if (countrySorting.HasValue)
+            using (this.PersonsView?.DeferRefresh())
             {
-                // Remove only affected sorter but not any other since we are able to sort by multiple properties ".ThenBy(...)". 
-                /// <seealso cref="Enumerable.ThenByDescending{TSource, TKey}(IOrderedEnumerable{TSource}, Func{TSource, TKey}, IComparer{TKey}?)"/>
-                PersonsView.SortDescriptions.Remove(countrySorting.Value);
+                if (countrySorting.HasValue)
+                {
+                    // Remove only affected sorter but not any other since we are able to sort by multiple properties ".ThenBy(...)". 
+                    /// <seealso cref="Enumerable.ThenByDescending{TSource, TKey}(IOrderedEnumerable{TSource}, Func{TSource, TKey}, IComparer{TKey}?)"/>
+                    PersonsView?.SortDescriptions.Remove(countrySorting.Value);
+                }
+
+                if (countrySorting == null || countrySorting.GetValueOrDefault().Direction == ListSortDirection.Descending)
+                {
+                    // if never sorted or currently sorted descending, sort ascending
+                    PersonsView?.SortDescriptions.Add(new SortDescription(nameof(PersonEntity.Country), ListSortDirection.Ascending));
+                }
+                else
+                {
+                    // if currently sorted ascending, sort descending
+                    PersonsView?.SortDescriptions.Add(new SortDescription(nameof(PersonEntity.Country), ListSortDirection.Descending));
+                }
             }
 
-            if (countrySorting == null || countrySorting.GetValueOrDefault().Direction == ListSortDirection.Descending)
-            {
-                // if never sorted or currently sorted descending, sort ascending
-                PersonsView.SortDescriptions.Add(new SortDescription(nameof(PersonEntity.Country), ListSortDirection.Ascending));
-            }
-            else
-            {
-                // if currently sorted ascending, sort descending
-                PersonsView.SortDescriptions.Add(new SortDescription(nameof(PersonEntity.Country), ListSortDirection.Descending));
-            }
+            this.PersonsView?.Refresh();
         }
 
         public void FilterByCountry(string country)
         {
-            if (PersonsView == null)
+            // ToDo: Comment in if working
+            using (this.PersonsView?.DeferRefresh())
             {
-                return;
-            }
+                if (PersonsView == null)
+                {
+                    return;
+                }
 
-            if (string.IsNullOrEmpty(country))
-            {
-                PersonsView.Filter = null;
+                if (string.IsNullOrEmpty(country))
+                {
+                    PersonsView.Filter = null;
+                }
+                else
+                {
+                    PersonsView.Filter = o => ((PersonEntity)o).Country == country;
+                }
             }
-            else
-            {
-                PersonsView.Filter = o => ((PersonEntity)o).Country == country;
-            }
-
             PersonsView.Refresh();
         }
     }

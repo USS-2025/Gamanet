@@ -27,14 +27,14 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
             this.DataContextChanged += this.MainPanel_DataContextChanged;
             
             _serviceProvider = App.ServiceProvider;
-
-            // Set it only once per MainPanel to have only one instance per MainPanel.
-            // Getting model instance per service provider will cause constructor DI to work.
-            this.RootContainer.DataContext = _model = _serviceProvider.GetRequiredService<MainPanelViewModel>();
         }
 
         private void MainPanel_Loaded(object sender, RoutedEventArgs e)
         {
+            // Set it only once per MainPanel to have only one instance per MainPanel.
+            // Getting model instance per service provider will cause constructor DI to work.
+            this.RootContainer.DataContext = _model = _serviceProvider.GetRequiredService<MainPanelViewModel>();
+
             string infoMsg = $"{nameof(MainPanel_Loaded)}: {nameof(DataContext)}=={this.DataContext ?? "null"}";
 
             Trace.TraceInformation(infoMsg);

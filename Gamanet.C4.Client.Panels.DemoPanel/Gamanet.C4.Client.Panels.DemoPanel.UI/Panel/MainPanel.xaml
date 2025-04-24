@@ -7,7 +7,7 @@
              xmlns:local="clr-namespace:Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel"
              mc:Ignorable="d" 
              d:DataContext="{d:DesignInstance d:Type={x:Type local:MainPanelViewModel}, IsDesignTimeCreatable=True}"
-             d:DesignHeight="450" d:DesignWidth="800"
+             d:DesignHeight="450" d:DesignWidth="1200"
              xmlns:person="clr-namespace:Gamanet.C4.Client.Panels.DemoPanel.Entities;assembly=Gamanet.C4.Client.Panels.DemoPanel.Entities"
              >
     <UserControl.Resources>
@@ -45,7 +45,7 @@
 
                 </DockPanel>
 
-                <TextBlock x:Name="PersonsCount" Text="{Binding PersonsCount, StringFormat=Found {0} people in list.}"/>
+                <TextBlock x:Name="PersonsCount" Text="{Binding Persons.Count, StringFormat=Found {0} people in list.}"/>
 
                 <StackPanel Orientation="Horizontal" Margin="5">
                     <StackPanel.Resources>
@@ -69,6 +69,9 @@
 
             </StackPanel>
 
+            <TextBlock Text="{Binding ., StringFormat=DataContext: {0}}" DockPanel.Dock="Top"/>
+            <TextBlock Text="{Binding Persons , StringFormat=Bound collection: {0}}" DockPanel.Dock="Top"/>
+
             <!-- Read-only text boxes are perfect for selecting & copying text.
                 Visibility: Don't forget to collapse this text if nor error. -->
             <TextBox x:Name="TextBoxStatusText" IsReadOnly="True" DockPanel.Dock="Bottom"
@@ -83,71 +86,80 @@
                      >
             </TextBox>
 
-            <!--<ItemsControl ItemsSource="{Binding Persons}"/>-->
+            <Border BorderBrush="Black" BorderThickness="5" DockPanel.Dock="Top">
+                <DockPanel>
+                    <ItemsControl ItemsSource="{Binding Persons}"/>
 
-            <ItemsControl x:Name="PersonsList" ItemsSource="{Binding PersonsView}"                              
-                              Height="Auto" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Hidden">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel MaxWidth="800"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate  DataType="{x:Type person:PersonEntity}">
-                        <DataTemplate.Resources>
-                            <Style TargetType="{x:Type TextBlock}">
-                                <Setter Property="Margin" Value="0"/>
-                                <Setter Property="HorizontalAlignment" Value="Right"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                            </Style>
-                            <Style TargetType="{x:Type TextBox}">
-                                <Setter Property="Padding" Value="0"/>
-                                <Setter Property="IsReadOnly" Value="True"/>
+                    <ScrollViewer>
+                        <!-- For testing purposes scrollbar always visible to check if it doesn't overlap the items -->
+                        <ItemsControl x:Name="PersonsList" ItemsSource="{Binding PersonsView}"                              
+                              Height="Auto"
+                             ScrollViewer.VerticalScrollBarVisibility="Visible" 
+                             ScrollViewer.HorizontalScrollBarVisibility="Hidden">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate  DataType="{x:Type person:PersonEntity}">
+                                    <DataTemplate.Resources>
+                                        <Style TargetType="{x:Type TextBlock}">
+                                            <Setter Property="Margin" Value="0"/>
+                                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                        </Style>
+                                        <Style TargetType="{x:Type TextBox}">
+                                            <Setter Property="Padding" Value="0"/>
+                                            <Setter Property="IsReadOnly" Value="True"/>
 
-                                <Setter Property="HorizontalAlignment" Value="Stretch"/>
-                                <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                                            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                                            <Setter Property="HorizontalContentAlignment" Value="Left"/>
 
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="VerticalContentAlignment" Value="Center"/>
 
-                                <Setter Property="BorderThickness" Value="1"/>
-                            </Style>
-                        </DataTemplate.Resources>
-                        <!-- Read-only text boxes are perfect for selecting & copying tet-->
-                        <Border BorderBrush="Gray" CornerRadius="3" BorderThickness="3"
+                                            <Setter Property="BorderThickness" Value="1"/>
+                                        </Style>
+                                    </DataTemplate.Resources>
+                                    <!-- Read-only text boxes are perfect for selecting & copying tet-->
+                                    <Border BorderBrush="Gray" CornerRadius="3" BorderThickness="3"
                                     Height="Auto" Padding="2" Margin="2">
-                            <!-- Use a Grid for good looking alignment -->
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" MinWidth="25" MaxWidth="100"/>
-                                    <ColumnDefinition Width="Auto" MinWidth="75" MaxWidth="250"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition/>
-                                    <RowDefinition/>
-                                    <RowDefinition/>
-                                    <RowDefinition/>
-                                </Grid.RowDefinitions>
+                                        <!-- Use a Grid for good looking alignment -->
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" MinWidth="25" MaxWidth="100"/>
+                                                <ColumnDefinition Width="Auto" MinWidth="75" MaxWidth="250"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                            </Grid.RowDefinitions>
 
-                                <TextBlock Text="Name: " Grid.Column="0" Grid.Row="0"/>
-                                <TextBox Text="{Binding Name, Mode=OneWay}" Grid.Column="1" Grid.Row="0"/>
+                                            <TextBlock Text="Name: " Grid.Column="0" Grid.Row="0"/>
+                                            <TextBox Text="{Binding Name, Mode=OneWay}" Grid.Column="1" Grid.Row="0"/>
 
-                                <TextBlock Text="Country: " Grid.Column="0" Grid.Row="1"/>
-                                <TextBox Text="{Binding Country, Mode=OneWay}" Grid.Column="1" Grid.Row="1"/>
+                                            <TextBlock Text="Country: " Grid.Column="0" Grid.Row="1"/>
+                                            <TextBox Text="{Binding Country, Mode=OneWay}" Grid.Column="1" Grid.Row="1"/>
 
-                                <TextBlock Text="Phone: " Grid.Column="0" Grid.Row="2"/>
-                                <TextBox Text="{Binding Phone, Mode=OneWay}" Grid.Column="1" Grid.Row="2"/>
+                                            <TextBlock Text="Phone: " Grid.Column="0" Grid.Row="2"/>
+                                            <TextBox Text="{Binding Phone, Mode=OneWay}" Grid.Column="1" Grid.Row="2"/>
 
-                                <TextBlock Text="Email: " Grid.Column="0" Grid.Row="3"/>
-                                <TextBox Text="{Binding Email, Mode=OneWay}" Grid.Column="1" Grid.Row="3"
+                                            <TextBlock Text="Email: " Grid.Column="0" Grid.Row="3"/>
+                                            <TextBox Text="{Binding Email, Mode=OneWay}" Grid.Column="1" Grid.Row="3"
                                              MaxWidth="150" TextWrapping="Wrap" MaxLines="3" 
                                              />
 
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
 
         </DockPanel>
 

@@ -1,14 +1,7 @@
-﻿using Microsoft.Extensions.Hosting;
-using System.Text;
+﻿using Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel;
+using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows
 {
@@ -17,21 +10,45 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows
     /// </summary>
     public partial class MainWindow : Window
     {
+        private readonly IServiceProvider _serviceProvider;
+        private MainWindowViewModel? _model;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            //_viewModel = (MainPanelViewModel)DataContext;
-            var context = this.DataContext;
-
             this.Loaded += this.MainWindow_Loaded;
+            this.DataContextChanged += this.MainWindow_DataContextChanged;
+
+            _serviceProvider = App.ServiceProvider;
+
+            // Set it only once per MainPanel to have only one instance per MainPanel
+            // Getting model instance per service provider will cause constructor DI to work.
+            //this.RootContainer.DataContext = _model = _serviceProvider.GetRequiredService<MainWindowViewModel>();
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            //_viewModel = (MainPanelViewModel)DataContext;
-            var context = this.DataContext;
+            string infoMsg = $"{nameof(MainWindow_Loaded)}: {nameof(DataContext)}=={this.DataContext ?? "null"}";
+
+            Trace.TraceInformation(infoMsg);
+
+            if (this.RootContainer.DataContext is MainPanelViewModel model)
+            {
+                model.StatusText = infoMsg;
+            }
+        }
+
+        private void MainWindow_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            string infoMsg = $"{nameof(MainWindow_DataContextChanged)}: {e.OldValue ?? "null"} --> {e.NewValue ?? "null"}";
+
+            Trace.TraceInformation(infoMsg);
+
+            if (this.RootContainer.DataContext is MainPanelViewModel model)
+            {
+                model.StatusText = infoMsg;
+            }
         }
     }
 }

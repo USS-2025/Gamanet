@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Gamanet.C4.Client.Utils.Helpers;
+﻿using Gamanet.C4.Client.Panels.DemoPanel.MVVM;
 
 namespace Gamanet.C4.Client.Panels.DemoPanel.Entities
 {
@@ -28,7 +27,7 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.Entities
 
         public string? Email { get; set; }
 
-
+        public override string ToString() => $"{this.Name} ({this.Country})";
     }
 
 }

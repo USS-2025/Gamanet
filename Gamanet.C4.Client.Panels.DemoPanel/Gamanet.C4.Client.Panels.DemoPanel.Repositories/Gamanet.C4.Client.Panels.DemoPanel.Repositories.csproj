@@ -4,6 +4,15 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Configurations>Debug;Release;DebugAppHost</Configurations>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugAppHost|AnyCPU'">
+    <DefineConstants>$(DefineConstants);USE_APP_HOSTING</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Gamanet.C4.Client.Panels.DemoPanel.DataSources\Gamanet.C4.Client.Panels.DemoPanel.DataSources.csproj" />
+  </ItemGroup>
 
 </Project>

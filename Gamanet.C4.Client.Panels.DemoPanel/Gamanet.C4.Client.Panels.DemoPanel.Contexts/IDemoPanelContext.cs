@@ -1,8 +1,8 @@
 ﻿using Gamanet.C4.Client.Panels.DemoPanel.Entities;
 
-namespace Gamanet.C4.Client.Panels.DemoPanel.Repositories
+namespace Gamanet.C4.Client.Panels.DemoPanel.Contexts
 {
-    public interface IPersonRepository
+    public interface IDemoPanelContext : IAppContext
     {
         Task<IEnumerable<PersonEntity>> GetAllPersonsAsync();
     }

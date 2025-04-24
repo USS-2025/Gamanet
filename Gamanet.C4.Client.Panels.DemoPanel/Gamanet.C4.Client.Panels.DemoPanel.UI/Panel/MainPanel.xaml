@@ -2,45 +2,63 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              xmlns:local="clr-namespace:Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel"
              mc:Ignorable="d" 
              d:DataContext="{d:DesignInstance d:Type={x:Type local:MainPanelViewModel}, IsDesignTimeCreatable=True}"
              d:DesignHeight="450" d:DesignWidth="800"
+             xmlns:person="clr-namespace:Gamanet.C4.Client.Panels.DemoPanel.Entities;assembly=Gamanet.C4.Client.Panels.DemoPanel.Entities"
              >
-    
-    <Grid x:Name="RootContainer">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="boolToVisConverter"/>
+        <!--<local:MainPanelViewModel x:Key="MainPanelViewModel" />-->
+        <Style TargetType="{x:Type TextBlock}">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+    </UserControl.Resources>
 
+    <Grid x:Name="RootContainer">
+        <!--DataContext="{StaticResource MainPanelViewModel}"-->
 
         <DockPanel LastChildFill="True">
 
-            <TextBlock Text="Demo Panel: CSV Reader ()" DockPanel.Dock="Top" 
+            <TextBlock Text="Demo Panel: CSV &amp; Excel Reader" DockPanel.Dock="Top" 
                            HorizontalAlignment="Center"
                            FontSize="24" FontWeight="Bold" Margin="10"/>
 
-            <TextBlock Text="{Binding StringFormat=Used Model type: {0}}" DockPanel.Dock="Top"/>
+            <TextBlock  DockPanel.Dock="Top">
+                <Run Text="Current directory (in which this app currently runs): "/>
+                <Run Text="{x:Static sys:Environment.CurrentDirectory}"/>
+            </TextBlock>
 
             <StackPanel Name="ControlsPanel" DockPanel.Dock="Top" Orientation="Vertical" Margin="10">
 
-                <DockPanel x:Name="FileSelectPanel" LastChildFill="True" Margin="10">
+                <DockPanel x:Name="FileSelectPanel" LastChildFill="True" Margin="5">
                     <Button x:Name="SelectFileButton" Content="Select CSV File..." DockPanel.Dock="Left" 
-                            MinHeight="25" Margin="5" Padding="5"/>
-                    <TextBox x:Name="TextBlockFilePath" IsReadOnly="True" Margin="5"
-                             Text="{Binding Filepath, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}">
-                    </TextBox>
+                            MinHeight="25" Margin="5" Padding="5"
+                            IsEnabled="{Binding CanLoadData}"
+                            Click="SelectFileButton_Click"/>
+                    <!-- Read-only text boxes are perfect for selecting & copying tet-->
+                    <TextBox x:Name="TextBoxFilePath" IsReadOnly="True" Margin="5"
+                             Text="{Binding ExcelFilePath, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"/>
+
                 </DockPanel>
+
+                <TextBlock x:Name="PersonsCount" Text="{Binding PersonsCount, StringFormat=Found {0} people in list.}"/>
 
                 <StackPanel Orientation="Horizontal" Margin="5">
                     <StackPanel.Resources>
                         <Style TargetType="{x:Type CheckBox}">
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="VerticalContentAlignment" Value="Center"/>
+                            <!--<Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="VerticalContentAlignment" Value="Center"/>-->
                             <Setter Property="Margin" Value="10"/>
                         </Style>
                     </StackPanel.Resources>
 
                     <TextBlock Text="Filter by: "/>
-                    <ComboBox x:Name="CountryFilterCombo" Width="150"
+                    <ComboBox x:Name="CountryFilterCombo" ItemsSource="{Binding Countries}"
+                                 VerticalContentAlignment="Center" SelectedIndex="0" MinWidth="150" MaxWidth="300"
                                 SelectionChanged="CountryFilterCombo_SelectionChanged"/>
                     <CheckBox x:Name="CheckboxSortByName" Content="Sort by Name" 
                               Checked="CheckBox_Checked"/>
@@ -51,22 +69,85 @@
 
             </StackPanel>
 
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+            <!-- Read-only text boxes are perfect for selecting & copying text.
+                Visibility: Don't forget to collapse this text if nor error. -->
+            <TextBox x:Name="TextBoxStatusText" IsReadOnly="True" DockPanel.Dock="Bottom"
+                             Text="{Binding StatusText, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"
+                     >
+            </TextBox>
 
-                <ItemsControl x:Name="PersonsList" ItemsSource="{Binding PersonsView}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border BorderBrush="Gray" BorderThickness="1" Padding="5" Margin="5">
-                                <StackPanel>
-                                    <TextBlock Text="Name: {Binding Name}" />
-                                    <TextBlock Text="Country: {Binding Country}" />
-                                    <TextBlock Text="Phone: {Binding Phone}" />
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
+            <!-- Read-only text boxes are perfect for selecting & copying text-->
+            <TextBox x:Name="TextBoxErrorText" Foreground="Red" FontSize="24" IsReadOnly="True" DockPanel.Dock="Bottom" Margin="5" 
+                             Text="{Binding ErrorText, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}"
+                             Visibility="{Binding HasErrors, Converter={StaticResource boolToVisConverter}}"
+                     >
+            </TextBox>
+
+            <!--<ItemsControl ItemsSource="{Binding Persons}"/>-->
+
+            <ItemsControl x:Name="PersonsList" ItemsSource="{Binding PersonsView}"                              
+                              Height="Auto" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Hidden">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel MaxWidth="800"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate  DataType="{x:Type person:PersonEntity}">
+                        <DataTemplate.Resources>
+                            <Style TargetType="{x:Type TextBlock}">
+                                <Setter Property="Margin" Value="0"/>
+                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                            <Style TargetType="{x:Type TextBox}">
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="IsReadOnly" Value="True"/>
+
+                                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Left"/>
+
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+
+                                <Setter Property="BorderThickness" Value="1"/>
+                            </Style>
+                        </DataTemplate.Resources>
+                        <!-- Read-only text boxes are perfect for selecting & copying tet-->
+                        <Border BorderBrush="Gray" CornerRadius="3" BorderThickness="3"
+                                    Height="Auto" Padding="2" Margin="2">
+                            <!-- Use a Grid for good looking alignment -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" MinWidth="25" MaxWidth="100"/>
+                                    <ColumnDefinition Width="Auto" MinWidth="75" MaxWidth="250"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Text="Name: " Grid.Column="0" Grid.Row="0"/>
+                                <TextBox Text="{Binding Name, Mode=OneWay}" Grid.Column="1" Grid.Row="0"/>
+
+                                <TextBlock Text="Country: " Grid.Column="0" Grid.Row="1"/>
+                                <TextBox Text="{Binding Country, Mode=OneWay}" Grid.Column="1" Grid.Row="1"/>
+
+                                <TextBlock Text="Phone: " Grid.Column="0" Grid.Row="2"/>
+                                <TextBox Text="{Binding Phone, Mode=OneWay}" Grid.Column="1" Grid.Row="2"/>
+
+                                <TextBlock Text="Email: " Grid.Column="0" Grid.Row="3"/>
+                                <TextBox Text="{Binding Email, Mode=OneWay}" Grid.Column="1" Grid.Row="3"
+                                             MaxWidth="150" TextWrapping="Wrap" MaxLines="3" 
+                                             />
+
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
         </DockPanel>
 

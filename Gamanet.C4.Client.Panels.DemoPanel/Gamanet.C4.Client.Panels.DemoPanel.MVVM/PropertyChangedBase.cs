@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace Gamanet.C4.Client.Utils.Helpers
+namespace Gamanet.C4.Client.Panels.DemoPanel.MVVM
 {
     public class PropertyChangedBase: INotifyPropertyChanged
     {

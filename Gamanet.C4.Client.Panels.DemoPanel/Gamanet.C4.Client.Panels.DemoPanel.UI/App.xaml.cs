@@ -1,25 +1,22 @@
 ﻿
-// If set, (Web) Application hosting with all its nice features will be used like in an ASP.NET app by default
-#define USE_APP_HOSTING
-
-using Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Interfaces;
-using Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Model;
-using System.ComponentModel.DataAnnotations;
-using System.Configuration;
-using System.Data;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
-using System.Windows;
 using Gamanet.C4.Client.Panels.DemoPanel.DataSources;
+using Gamanet.C4.Client.Panels.DemoPanel.Repositories;
+using Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel;
+using Gamanet.C4.Client.Panels.DemoPanel.DataSources.Interfaces;
+using Gamanet.C4.Client.Panels.DemoPanel.Contexts;
+using Gamanet.C4.Client.Panels.DemoPanel.Services.Interfaces;
+using Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Services;
+using System.Windows.Threading;
+using System.Diagnostics;
 
 
 
 #if USE_APP_HOSTING
-
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
 #endif
+
+using System.Windows;
 
 namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows
 {
@@ -28,41 +25,69 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows
     /// </summary>
     public partial class App : Application
     {
-#if USE_APP_HOSTING
+        public static IServiceProvider ServiceProvider { get; private set; }
 
+#if USE_APP_HOSTING
         public static IHost AppHost { get; private set; }
+#endif
 
         static App()
         {
+            AppDomain.CurrentDomain.UnhandledException += (s, e) => LogException("Current App Domain", s, e.ExceptionObject as Exception); ;
+            TaskScheduler.UnobservedTaskException += (s, e) => LogException("Task Scheduler", s, e.Exception); ;
+
+#if USE_APP_HOSTING
+
+            // An Application Host has many advantages (but not necessary for DI only):
+            // - Logging
+            // - Configuration (Provider) Setup
+            // - Environment setup (Development, Staging, Production)
+            // - Background services
+            // - Using Environment Variables
             AppHost = Host.CreateDefaultBuilder()
                 .ConfigureServices((context, services) =>
                 {
-                    // Register your services here
-
-                    // For now we will use only a single instance of IDemoPanelContext's default implementation
-                    services.AddSingleton<IDemoPanelContext, _DemoPanelContext>();
-                    services.AddSingleton<IPersonDataSource, CsvPersonDataSource>();
-                    services.AddSingleton<,>();
-                    services.AddSingleton<,>();
-                    services.AddSingleton<,>();
-                    services.AddSingleton<,>();
-                    services.AddSingleton<,>();
-
-
+                    ConfigureServices(services);
+                    ServiceProvider = services.BuildServiceProvider();
                 })
                 .Build();
+#else
+            var serviceCollection = new ServiceCollection();
+            ConfigureServices(serviceCollection);
+            ServiceProvider = serviceCollection.BuildServiceProvider();
+#endif
         }
 
-#endif
+        public App()
+        {
+            this.DispatcherUnhandledException += (s, e) => LogException("Dispatcher", s, e.Exception);
+        }
 
+        private static void LogException(string source, object sender, Exception? ex)
+            => Trace.TraceError($"Source: {source}; Sender: {sender}; Exception: {ex?.Message}", ex);
+
+        private static void ConfigureServices(IServiceCollection services)
+        {
+            // Register your services here
+
+            // For now we will use only a single instances of default implementations.
+            // Change implementation type (not interface type!) here if necessary.
+            services.AddSingleton<IPersonDataSource, ExcelPersonDataSource>();
+            services.AddSingleton<IPersonRepository, PersonRepository>();
+            services.AddSingleton<IDemoPanelContext, _DemoPanelContext>();
+
+            // Using in scope: useful if service implements IDisposable
+            services.AddScoped<IFileDialogService, FileDialogService>();
+
+            // Transient: New instance on every request by 
+            services.AddTransient<MainWindowViewModel>();
+            services.AddTransient<MainPanelViewModel>();
+        }
+
+#if USE_APP_HOSTING
         protected override async void OnStartup(StartupEventArgs e)
         {
             await AppHost.StartAsync();
-
-            // In case of not using App Host and DI (Dependency Injection):
-            // Initialize application context manually
-            var dpContext = new _DemoPanelContext();
-
 
             base.OnStartup(e);
         }
@@ -73,6 +98,8 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows
 
             base.OnExit(e);
         }
-    }
+#endif
 
+    }
 }
+

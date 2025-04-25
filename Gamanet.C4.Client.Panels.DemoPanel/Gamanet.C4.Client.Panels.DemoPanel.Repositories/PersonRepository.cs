@@ -1,6 +1,4 @@
-﻿
-using Gamanet.C4.Client.Panels.DemoPanel.DataSources;
-using Gamanet.C4.Client.Panels.DemoPanel.DataSources.Interfaces;
+﻿using Gamanet.C4.Client.Panels.DemoPanel.DataSources.Interfaces;
 using Gamanet.C4.Client.Panels.DemoPanel.Entities;
 
 namespace Gamanet.C4.Client.Panels.DemoPanel.Repositories

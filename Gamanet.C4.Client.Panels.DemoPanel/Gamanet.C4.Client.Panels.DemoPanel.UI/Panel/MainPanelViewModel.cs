@@ -4,10 +4,12 @@ using Gamanet.C4.Client.Panels.DemoPanel.Entities;
 using Gamanet.C4.Client.Panels.DemoPanel.MVVM;
 using Gamanet.C4.Client.Panels.DemoPanel.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Windows;
 using System.Windows.Data;
 using System.Windows.Threading;
 
@@ -49,8 +51,6 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
 
         public ICollectionView? PersonsView { get; }
 
-        //public int PersonsCount { get => this.Persons.Count; }
-
         private bool _canLoadData = true;
 
         public bool CanLoadData
@@ -88,10 +88,10 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
 
         public void FillDesignData()
         {
-            // ToDo: Comment in if working
-            //if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
-
-            this.ErrorText = "Design mode: Test-Error.";
+            if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
+            {
+                this.ErrorText = "Design mode: Test-Error.";
+            }
 
             var testPeopleForDesignMode = new List<PersonEntity>
                 ([
@@ -106,7 +106,7 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
                 ]);
 
             // Now for testing many items (scroll bar visibilities, limiting size of items control etc.)
-            for (int i = 4; i < 100; i++)
+            for (int i = 4; i < 50; i++)
             {
                 testPeopleForDesignMode.Add(new()
                 {
@@ -137,17 +137,41 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
             _dpContext = dpContext;
         }
 
-
-        public async Task LoadPersons()
+        public async Task LoadPersons(bool showFileDialog = true)
         {
+            // Still in UI thread --> write data bound properties here
+            this.ResetPeopleFillListProperties();
+
+            Trace.TraceInformation($"[{Environment.CurrentManagedThreadId:000}]: {this}: {nameof(LoadPersons)}: CALL {nameof(LoadPersonsAsync)}()...");
+            // from here on not in UI Thread anymore
+            await LoadPersonsAsync(showFileDialog);
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="showFileDialog">
+        /// If false, <see cref="DEFAULT_CSV_FILEPATH_RELATIVE"/> will be used.
+        /// (More for fast testing purposes).
+        /// </param>
+        public async Task LoadPersonsAsync(bool showFileDialog = true)
+        {
+            Trace.TraceInformation($"[{Environment.CurrentManagedThreadId:000}]: {this}: {nameof(LoadPersonsAsync)} called.");
+
             if (_dpContext == null || !this.CanLoadData)
             {
                 return;
             }
 
+            string? selectedFilePath;
+
             if (_fileDlgService != null)
             {
-                string initialFilePath = Path.Combine(Environment.CurrentDirectory, DEFAULT_CSV_FILEPATH_RELATIVE);
+                string initialFilePath = Path.Combine(
+                    // trimming necessary because Path.Combine() has strange behavior if something is not perfect
+                    Environment.CurrentDirectory.TrimEnd('\\'),
+                    DEFAULT_CSV_FILEPATH_RELATIVE.TrimStart('\\', '.'));
 
                 try
                 {
@@ -158,11 +182,13 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
                     // Note: This works only if we registered this service as single instance!
                     var dataSource = _serviceProvider.GetRequiredService<IPersonDataSource>();
 
-                    if (dataSource is IExcelPersonDataSource excelSource &&
-                        !string.IsNullOrWhiteSpace(initialFilePath) && Path.Exists(initialFilePath))
+                    if (dataSource is IExcelPersonDataSource excelSource)
                     {
-                        string? selectedFilePath = _fileDlgService.OpenFile("CSV Files|*.csv|" +
-                                                                            "Excel Worksheets|*.xls|*.xlsx", initialFilePath);
+                        // Skip opening dialog for fast testing purposes (everything should be configurable)
+                        selectedFilePath = showFileDialog ?
+                                                _fileDlgService.OpenFile("CSV Files|*.csv|" +
+                                                                        "Excel Worksheets (*.xls, *.xlsx)|*.xls;*.xlsx", initialFilePath)
+                                                : initialFilePath;
 
                         if (!string.IsNullOrWhiteSpace(selectedFilePath) && Path.Exists(selectedFilePath))
                         {
@@ -172,22 +198,79 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
                             this.ExcelFilePath = selectedFilePath;
                         }
                     }
+                    else
+                    {
+                        selectedFilePath = null;
+                    }
                 }
                 catch (Exception ex)
                 {
-                    Trace.TraceError($"Error on resolving service '{nameof(IExcelPersonDataSource)}'" +
-                                    $" (Did you forget to register in Startup / Bootstrapper?): {ex}");
+
+                    string errMsg = $"Error on opening {nameof(Microsoft.Win32.OpenFileDialog)} for CSV/Excel: {ex}";
+                    Trace.TraceError($"[{Environment.CurrentManagedThreadId:000}]: {errMsg}");
+
+                    try
+                    {
+                        // Try at least to enable button again for next time (we are not in UI thread here).
+                        await Dispatcher.CurrentDispatcher.InvokeAsync(() =>
+                        {
+                            this.CanLoadData = true;
+                            this.ErrorText = errMsg;
+                        }, DispatcherPriority.DataBind);
+                    }
+                    catch
+                    {
+                        Trace.TraceError($"[{Environment.CurrentManagedThreadId:000}]: Error on Dispatcher Invoke: {ex}");
+                    }
+
+                    return;
                 }
+            }
+            else
+            {
+                selectedFilePath = null;
             }
 
             // put to separate task for error evaluation
-            Task<IEnumerable<PersonEntity>> fetchPeopleTask = _dpContext.GetAllPersonsAsync();
+            //Task<IEnumerable<PersonEntity>> fetchPeopleTask = _dpContext.GetAllPersonsAsync();
 
             //await Task.Factory.StartNew(async () =>
             //{
 
+            List<PersonEntity>? people;
+            Exception? fetchPeopleListException;
+
+            // Execute query by .ToList()
             // Make a copy to RAM here if you are sure your data has limited data sets anyway
-            var people = (await fetchPeopleTask).ToList();
+            // If not, please us pagination mechanism
+            try
+            {
+                people = [.. await _dpContext.GetAllPersonsAsync()];
+                fetchPeopleListException = null;
+            }
+            catch (Exception ex)
+            {
+                string errMsg = $"Error on reading {(string.IsNullOrWhiteSpace(selectedFilePath) ?
+                                                    Path.GetFileName(selectedFilePath) :
+                                                    "CSV or Excel")}: {ex}";
+                Trace.TraceError($"[{Environment.CurrentManagedThreadId:000}]: {errMsg}");
+
+                try
+                {
+                    // Try at least to enable button again for next time (we are not in UI thread here).
+                    await Dispatcher.CurrentDispatcher.InvokeAsync(() =>
+                    {
+                        this.CanLoadData = true;
+                        this.ErrorText = errMsg;
+                    }, DispatcherPriority.DataBind);
+                }
+                catch
+                {
+                    Trace.TraceError($"[{Environment.CurrentManagedThreadId:000}]: Error on Dispatcher Invoke: {ex}");
+                }
+
+                return;
+            }
 
             // Call Invoke() or InvokeAsync() to ensure that the code runs on the UI thread.
             // Attention: This is a blocking call, so be careful with long running tasks.
@@ -198,39 +281,53 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
 
             try
             {
+                Trace.TraceInformation($"[{Environment.CurrentManagedThreadId:000}]: Dispatcher.CurrentDispatcher.InvokeAsync...");
                 await Dispatcher.CurrentDispatcher.InvokeAsync(callback: () =>
                 {
-                    try
+                    Trace.TraceInformation($"[{Environment.CurrentManagedThreadId:000}]: Dispatcher.CurrentDispatcher.VerifyAccess()...");
+                    Dispatcher.CurrentDispatcher.VerifyAccess();
+                    Trace.TraceInformation($"[{Environment.CurrentManagedThreadId:000}]: Dispatcher.CurrentDispatcher.VerifyAccess() OK.");
+
+                    this.ErrorText = string.Empty;
+
+                    // at first check if something went wrong before with fetching data
+                    if (fetchPeopleListException != null)
                     {
-                        Dispatcher.CurrentDispatcher.VerifyAccess();
+                        string errMsg = $"[{Environment.CurrentManagedThreadId:000}]: Error loading data: {fetchPeopleListException.Message}";
+                        Trace.TraceError(errMsg);
+                        this.ErrorText = errMsg;
 
-                        this.ErrorText = string.Empty;
-
-                        if (fetchPeopleTask.Status != TaskStatus.RanToCompletion)
+                        // enable button again for next use / attempt
+                        this.CanLoadData = true;
+                    }
+                    else
+                    {
+                        // go on here if no exception before
+                        // but even if no exception (e.g. 3rd party library doesn't throw any exception on error),
+                        // check nevertheless if people list is null or empty
+                        if (people?.Count > 0)
                         {
-                            this.ErrorText =
-                                $"Error loading data: {fetchPeopleTask.Exception?.Message}";
-
-                            return;
+                            Trace.TraceInformation($"[{Environment.CurrentManagedThreadId:000}]: UpdatePeopleList...");
+                            this.UpdatePeopleList(people);
+                            Trace.TraceInformation($"[{Environment.CurrentManagedThreadId:000}]: UpdatePeopleList finished.");
+                        }
+                        else
+                        {
+                            string wrnMsg = $"No people could be found in list.";
+                            this.ErrorText = wrnMsg;
+                            Trace.TraceWarning($"[{Environment.CurrentManagedThreadId:000}]: {wrnMsg}");
                         }
 
-                        this.UpdatePeopleList(people);
-                    }
-                    catch (Exception ex)
-                    {
-                        this.ErrorText = $"Error loading data: {ex.Message}";
-                    }
-                    finally
-                    {
                         // Anyway (if something went wrong or not, don't forget to make button visible again)
                         this.CanLoadData = true;
                     }
 
                 }, DispatcherPriority.Background);
+                Trace.TraceInformation($"[{Environment.CurrentManagedThreadId:000}]: Dispatcher.CurrentDispatcher.InvokeAsync OK.");
             }
             catch (Exception ex)
             {
-                Trace.TraceError($"Error on await Dispatcher.CurrentDispatcher.InvokeAsync: {ex}");
+                Trace.TraceError($"[{Environment.CurrentManagedThreadId:000}]: Error on await Dispatcher.CurrentDispatcher.InvokeAsync: {ex}");
             }
             finally
             {
@@ -247,10 +344,7 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
         /// <param name="people"></param>
         public void UpdatePeopleList(IEnumerable<PersonEntity> people)
         {
-            this.CanLoadData = false;
-
-            this.Countries.Clear();
-            this.Persons.Clear();
+            this.ResetPeopleFillListProperties();
 
             foreach (var person in people)
             {
@@ -258,6 +352,7 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
             }
 
             this.StatusText = $"{this}: Added {this.Persons.Count} people to collection.";
+            Trace.TraceInformation($"[{Environment.CurrentManagedThreadId:000}]: {this}: Added {this.Persons.Count} people to collection.");
 
             // Don't forget leading separated value for no filtering (all countries)
             var countries = new string[] { Constants.FilterConstants.ALL_COUNTRIES }
@@ -273,6 +368,13 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
             }
 
             this.CanLoadData = true;
+        }
+
+        private void ResetPeopleFillListProperties()
+        {
+            this.CanLoadData = false;
+            this.Countries.Clear();
+            this.Persons.Clear();
         }
 
         public void SortByNameToggle()

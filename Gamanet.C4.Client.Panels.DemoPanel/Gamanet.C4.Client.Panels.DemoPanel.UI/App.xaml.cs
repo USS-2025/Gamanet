@@ -6,13 +6,10 @@ using Gamanet.C4.Client.Panels.DemoPanel.DataSources.Interfaces;
 using Gamanet.C4.Client.Panels.DemoPanel.Contexts;
 using Gamanet.C4.Client.Panels.DemoPanel.Services.Interfaces;
 using Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Services;
-using System.Windows.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
 
-
-
 #if USE_APP_HOSTING
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 #endif
 
@@ -79,9 +76,18 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows
             // Using in scope: useful if service implements IDisposable
             services.AddScoped<IFileDialogService, FileDialogService>();
 
-            // Transient: New instance on every request by 
+            // Transient: New instance on every request by generic extension method:
+            /// <see cref="DependencyInjection.IServiceProvider.GetRequiredService(Type)"/>
+            /// or by non-generic non-extension method:
+            /// <seealso cref="IServiceProvider.GetService(Type)"/>
             services.AddTransient<MainWindowViewModel>();
             services.AddTransient<MainPanelViewModel>();
+            // Only for testing purposes:
+            // !!! NOTE !!!: Single instance of MainWindowViewModel would be OK,
+            // but not for MainPanelViewModel since the sense of a UserControl
+            // re-using multiple times und thus multi-instantiating of it's view model
+            // Data context of UserControl is being attached to
+            //services.AddSingleton<MainPanelViewModel>();
         }
 
 #if USE_APP_HOSTING

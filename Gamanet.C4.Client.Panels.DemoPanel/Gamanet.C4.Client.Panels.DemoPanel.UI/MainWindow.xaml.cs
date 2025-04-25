@@ -25,15 +25,22 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            var modelToAttach = _serviceProvider.GetRequiredService<MainWindowViewModel>();
+            _model = modelToAttach;
+
+            Trace.TraceInformation($"{nameof(MainWindow_Loaded)}:" +
+                $" Attaching {modelToAttach} to {nameof(DataContext)} of {nameof(MainPanel)}...");
+
             // Set it only once per MainPanel to have only one instance per MainPanel
             // Getting model instance per service provider will cause constructor DI to work.
-            this.RootContainer.DataContext = _model = _serviceProvider.GetRequiredService<MainWindowViewModel>();
+            //this.RootContainer.DataContext = _model = _serviceProvider.GetRequiredService<MainWindowViewModel>();
+            this.DataContext = modelToAttach;
 
             string infoMsg = $"{nameof(MainWindow_Loaded)}: {nameof(DataContext)}=={this.DataContext ?? "null"}";
 
             Trace.TraceInformation(infoMsg);
 
-            if (this.RootContainer.DataContext is MainPanelViewModel model)
+            if (this.DataContext is MainPanelViewModel model)
             {
                 model.StatusText = infoMsg;
             }
@@ -45,7 +52,7 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows
 
             Trace.TraceInformation(infoMsg);
 
-            if (this.RootContainer.DataContext is MainPanelViewModel model)
+            if (this.DataContext is MainPanelViewModel model)
             {
                 model.StatusText = infoMsg;
             }

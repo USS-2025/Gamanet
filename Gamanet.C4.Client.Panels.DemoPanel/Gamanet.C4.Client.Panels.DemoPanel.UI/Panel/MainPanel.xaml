@@ -67,10 +67,14 @@
                               />
                 </StackPanel>
 
-            </StackPanel>
+                <TextBlock Text="{Binding ., StringFormat=DataContext: {0}}" DockPanel.Dock="Top"/>
+                <TextBlock Text="{Binding Persons , StringFormat=Bound collection: {0}}" DockPanel.Dock="Top"/>
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="Test in VM" Click="ButtonTestInVM_Click"/>
+                    <Button Content="Test in Code behind (no VM)" Click="ButtonTestInCodeBehind_Click"/>
+                </StackPanel>
 
-            <TextBlock Text="{Binding ., StringFormat=DataContext: {0}}" DockPanel.Dock="Top"/>
-            <TextBlock Text="{Binding Persons , StringFormat=Bound collection: {0}}" DockPanel.Dock="Top"/>
+            </StackPanel>
 
             <!-- Read-only text boxes are perfect for selecting & copying text.
                 Visibility: Don't forget to collapse this text if nor error. -->
@@ -88,7 +92,7 @@
 
             <Border BorderBrush="Black" BorderThickness="5" DockPanel.Dock="Top">
                 <DockPanel>
-                    <ItemsControl ItemsSource="{Binding Persons}"/>
+                    <ItemsControl Name="ToDoRemoveAfterTestItemsControl" ItemsSource="{Binding Persons}"/>
 
                     <ScrollViewer>
                         <!-- For testing purposes scrollbar always visible to check if it doesn't overlap the items -->

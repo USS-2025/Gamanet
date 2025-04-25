@@ -1,7 +1,5 @@
 ﻿using Gamanet.C4.Client.Panels.DemoPanel.Entities;
 using Gamanet.C4.Client.Panels.DemoPanel.Repositories;
-using Gamanet.C4.Client.Panels.DemoPanel.Contexts;
-using System;
 
 namespace Gamanet.C4.Client.Panels.DemoPanel.Contexts
 {
@@ -39,8 +37,8 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.Contexts
                 return [];
             }
 
-            // Simulate long work for testing
-            await Task.Delay(TimeSpan.FromSeconds(3));
+            // Simulate long work for testing if UI nevertheless reacts (if no duża masakra waiting cursor shown)
+            //await Task.Delay(TimeSpan.FromSeconds(3));
 
             return await _personRepo.GetAllPersonsAsync();
         }

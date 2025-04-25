@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gamanet.C4.Client.Panels.De
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gamanet.C4.Client.Panels.DemoPanel.MVVM", "Gamanet.C4.Client.Panels.DemoPanel.MVVM\Gamanet.C4.Client.Panels.DemoPanel.MVVM.csproj", "{F377A61C-DF3E-4F82-B311-05BB9F6B6B39}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleTestApp", "ConsoleTestApp\ConsoleTestApp.csproj", "{A6AF2AC9-4DBB-4448-97E0-1831F653E659}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -91,6 +93,12 @@ Global
 		{F377A61C-DF3E-4F82-B311-05BB9F6B6B39}.DebugAppHost|Any CPU.Build.0 = Debug|Any CPU
 		{F377A61C-DF3E-4F82-B311-05BB9F6B6B39}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F377A61C-DF3E-4F82-B311-05BB9F6B6B39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6AF2AC9-4DBB-4448-97E0-1831F653E659}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6AF2AC9-4DBB-4448-97E0-1831F653E659}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6AF2AC9-4DBB-4448-97E0-1831F653E659}.DebugAppHost|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6AF2AC9-4DBB-4448-97E0-1831F653E659}.DebugAppHost|Any CPU.Build.0 = Debug|Any CPU
+		{A6AF2AC9-4DBB-4448-97E0-1831F653E659}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6AF2AC9-4DBB-4448-97E0-1831F653E659}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

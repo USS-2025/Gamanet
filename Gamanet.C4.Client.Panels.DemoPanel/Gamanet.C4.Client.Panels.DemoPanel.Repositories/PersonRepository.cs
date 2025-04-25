@@ -9,12 +9,7 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.Repositories
 
 
         public PersonRepository() 
-        {
-#if USE_APP_HOSTING
-#else
-            _dataSource = new ExcelPersonDataSource();
-#endif
-        }
+        { }
 
         /// <summary>
         /// 

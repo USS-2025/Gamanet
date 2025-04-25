@@ -32,10 +32,10 @@
                 <Run Text="{x:Static sys:Environment.CurrentDirectory}"/>
             </TextBlock>
 
-            <StackPanel Name="ControlsPanel" DockPanel.Dock="Top" Orientation="Vertical" Margin="10">
+            <StackPanel Name="ControlsPanel" DockPanel.Dock="Top" Orientation="Vertical" Margin="5">
 
                 <DockPanel x:Name="FileSelectPanel" LastChildFill="True" Margin="5">
-                    <Button x:Name="SelectFileButton" Content="Select CSV File..." DockPanel.Dock="Left" 
+                    <Button x:Name="SelectFileButton" FontSize="20" Content="Select CSV File..." DockPanel.Dock="Left" 
                             MinHeight="25" Margin="5" Padding="5"
                             IsEnabled="{Binding CanLoadData}"
                             Click="SelectFileButton_Click"/>
@@ -49,29 +49,63 @@
 
                 <StackPanel Orientation="Horizontal" Margin="5">
                     <StackPanel.Resources>
-                        <Style TargetType="{x:Type CheckBox}">
-                            <!--<Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="VerticalContentAlignment" Value="Center"/>-->
-                            <Setter Property="Margin" Value="10"/>
+
+                        <Style TargetType="{x:Type Control}" x:Key="ControlStyle">
+                            <Setter Property="FontSize" Value="16"/>
+                        </Style>
+                        <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource ControlStyle}">
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="VerticalContentAlignment" Value="Center"/>
+                            <Setter Property="Margin" Value="5"/>
+                            <Setter Property="MinWidth" Value="75"/>
+                            <Setter Property="MinHeight" Value="25"/>
+                            <!--<Setter Property="Background" Value="Gold"/>-->
+                        </Style>
+                        <Style TargetType="{x:Type ComboBox}" BasedOn="{StaticResource ControlStyle}">
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="VerticalContentAlignment" Value="Center"/>
+                            <Setter Property="Margin" Value="5"/>
+                        </Style>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="Margin" Value="5"/>
+                            <Setter Property="FontSize" Value="16"/>
                         </Style>
                     </StackPanel.Resources>
 
                     <TextBlock Text="Filter by: "/>
                     <ComboBox x:Name="CountryFilterCombo" ItemsSource="{Binding Countries}"
-                                 VerticalContentAlignment="Center" SelectedIndex="0" MinWidth="150" MaxWidth="300"
+                               MinHeight="35"  VerticalContentAlignment="Center" SelectedIndex="0" MinWidth="150" MaxWidth="300"
                                 SelectionChanged="CountryFilterCombo_SelectionChanged"/>
-                    <CheckBox x:Name="CheckboxSortByName" Content="Sort by Name" 
-                              Checked="CheckBox_Checked"/>
-                    <CheckBox x:Name="CheckboxSortByCountry" Content="Sort by Country" 
-                              Checked="CheckBox_Checked"
+                    
+                    <TextBlock Text="Sort by: "/>
+                    <CheckBox x:Name="CheckboxSortByName" Content="Name" 
+                              IsThreeState="True" Click="CheckBoxSort_Click"/>
+                    <CheckBox x:Name="CheckboxSortByCountry" Content="Country" 
+                              IsThreeState="True" Click="CheckBoxSort_Click"
                               />
-                </StackPanel>
+                     <TextBlock Text=" (checked: ascending, unchecked: descending, tri-state: remove / no string): "/>
+               </StackPanel>
 
                 <TextBlock Text="{Binding ., StringFormat=DataContext: {0}}" DockPanel.Dock="Top"/>
                 <TextBlock Text="{Binding Persons , StringFormat=Bound collection: {0}}" DockPanel.Dock="Top"/>
                 <StackPanel Orientation="Horizontal">
-                    <Button Content="Test in VM" Click="ButtonTestInVM_Click"/>
-                    <Button Content="Test in Code behind (no VM)" Click="ButtonTestInCodeBehind_Click"/>
+                    <StackPanel.Resources>
+                        <Style TargetType="{x:Type Button}">
+                            <Setter Property="Margin" Value="5"/>
+                            <Setter Property="Padding" Value="5"/>
+                            <Setter Property="FontSize" Value="16"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding CanLoadData}" Value="">
+                                    <Setter Property="IsEnabled" Value="False" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Resources>
+                    <Button Content="0. Clear list(s)" Click="Button_ClearLists_Click"/>
+                    <Button Content="1. Test in Code behind (no VM)" Click="ButtonTestInCodeBehind_Click"/>
+                    <Button Content="2. Test in VM" Click="ButtonTestInVM_Click"/>
+                    <Button Content="3. No file dialog: Load from .\Assets\TestData\PersonsDemo.csv" Click="ButtonLoadCsv_Click"/>
                 </StackPanel>
 
             </StackPanel>

@@ -1,8 +1,10 @@
 ﻿using Gamanet.C4.Client.Panels.DemoPanel.Contexts;
+using Gamanet.C4.Client.Panels.DemoPanel.DataSources;
 using Gamanet.C4.Client.Panels.DemoPanel.DataSources.Interfaces;
 using Gamanet.C4.Client.Panels.DemoPanel.Entities;
 using Gamanet.C4.Client.Panels.DemoPanel.MVVM;
 using Gamanet.C4.Client.Panels.DemoPanel.Services.Interfaces;
+using Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
@@ -19,7 +21,7 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
     {
         private const string DEFAULT_CSV_FILEPATH_RELATIVE = @".\Assets\TestData\PersonsDemo.csv";
 
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceProvider? _serviceProvider;
 
         private readonly IDemoPanelContext? _dpContext;
         private readonly IFileDialogService? _fileDlgService;
@@ -77,48 +79,13 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
 
             // Just for demonstration: Using method declared in System namespace:
             /// <see cref="IServiceProvider.GetService(Type)"/> 
-            _dpContext = _serviceProvider.GetService(typeof(IDemoPanelContext)) as IDemoPanelContext;
-            _fileDlgService = _serviceProvider.GetService(typeof(IFileDialogService)) as IFileDialogService;
+            _dpContext = _serviceProvider?.GetRequiredService<IDemoPanelContext>() ?? new _DemoPanelContext();
+            _fileDlgService = _serviceProvider?.GetRequiredService<IFileDialogService>() ?? new FileDialogService();
 
             // Create view for filtering/sorting
             this.PersonsView = CollectionViewSource.GetDefaultView(this.Persons);
 
             this.FillDesignData();
-        }
-
-        public void FillDesignData()
-        {
-            if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
-            {
-                this.ErrorText = "Design mode: Test-Error.";
-            }
-
-            var testPeopleForDesignMode = new List<PersonEntity>
-                ([
-                    new() { Name = "Test Person 1", Country = "Poland", Phone= "+48 123 456 789", Email = "testperson1@poczta.pl"},
-                        new() { Name = "Test Person 2", Country = "Poland", Phone= "+48 456 789 123", Email = "testperson2@poczta.pl"},
-                        new() { Name = "Test Person 3", Country = "Germany", Phone= "+49 789 123 456", Email = "Test: very_very_very_very_" +
-                                                                                                       "very_very_very_very_" +
-                                                                                                       "very_very_very_very_" +
-                                                                                                       "very_very_very_very_" +
-                                                                                                       "very_very_very_very_" +
-                                                                                                       "long_email_address_testperson3@mail.de"},
-                ]);
-
-            // Now for testing many items (scroll bar visibilities, limiting size of items control etc.)
-            for (int i = 4; i < 50; i++)
-            {
-                testPeopleForDesignMode.Add(new()
-                {
-                    Name = $"Test Person {i}",
-                    Country = $"Poland",
-                    Phone = $"012 345 {i:000}",
-                    Email = $"email.address{i:00}@mail.com"
-                });
-            }
-
-            UpdatePeopleList(testPeopleForDesignMode);
-            this.CanLoadData = true;
         }
 
         /// <summary>
@@ -139,17 +106,70 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
 
         public async Task LoadPersons(bool showFileDialog = true)
         {
-            // Still in UI thread --> write data bound properties here
-            this.ResetPeopleFillListProperties();
 
             Trace.TraceInformation($"[{Environment.CurrentManagedThreadId:000}]: {this}: {nameof(LoadPersons)}: CALL {nameof(LoadPersonsAsync)}()...");
             // from here on not in UI Thread anymore
             await LoadPersonsAsync(showFileDialog);
         }
 
+        private string? GetCsvOrExcelFilePath(bool showFileDialog = true)
+        {
+            string? selectedFilePath;
+
+            string initialFilePath = Path.Combine(
+                // trimming necessary because Path.Combine() has strange behavior if something is not perfect
+                Environment.CurrentDirectory.TrimEnd('\\'),
+                DEFAULT_CSV_FILEPATH_RELATIVE.TrimStart('\\', '.'));
+
+            if (_fileDlgService != null)
+            {
+                try
+                {
+                    // Just for demonstration: This time using extension method
+                    // which does not require explicit type conversion since it's a generic method:
+                    /// <see cref="ServiceProviderServiceExtensions.GetRequiredService{T}(IServiceProvider)"/>
+
+                    // Skip opening dialog for fast testing purposes(everything should be configurable)
+
+                    selectedFilePath = showFileDialog ?
+                                            _fileDlgService.OpenFile("CSV Files|*.csv|" +
+                                                                    "Excel Worksheets (*.xls, *.xlsx)|*.xls;*.xlsx", initialFilePath)
+                                            : initialFilePath;
+
+                    // Note: This works only if we registered this service as single instance!
+                    var dataSource = _serviceProvider?.GetRequiredService<IPersonDataSource>() ?? new ExcelPersonDataSource();
+
+                    if (dataSource is IExcelPersonDataSource excelDataSource)
+                    {
+                        // File path for Excel reader
+                        excelDataSource.ExcelFilePath = selectedFilePath;
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                    string errMsg = $"Error on opening {nameof(Microsoft.Win32.OpenFileDialog)} for CSV/Excel: {ex}";
+                    Trace.TraceError($"[{Environment.CurrentManagedThreadId:000}]: {errMsg}");
+
+                    selectedFilePath = initialFilePath;
+
+                    this.CanLoadData = true;
+                    this.ErrorText = errMsg;
+                }
+            }
+            else
+            {
+                selectedFilePath = initialFilePath;
+            }
+
+            // File path for this view model to show in view
+            this.ExcelFilePath = selectedFilePath;
+
+            return selectedFilePath;
+        }
 
         /// <summary>
-        /// 
+        /// Loads all people from selected CSV or Excel.
         /// </summary>
         /// <param name="showFileDialog">
         /// If false, <see cref="DEFAULT_CSV_FILEPATH_RELATIVE"/> will be used.
@@ -164,78 +184,18 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
                 return;
             }
 
-            string? selectedFilePath;
+            // Still in UI thread --> write data bound properties here
+            this.CanLoadData = false;
 
-            if (_fileDlgService != null)
+            this.ResetPeopleFillListProperties();
+
+            string? selectedFilePath = this.GetCsvOrExcelFilePath(showFileDialog);
+
+            if (string.IsNullOrWhiteSpace(selectedFilePath))
             {
-                string initialFilePath = Path.Combine(
-                    // trimming necessary because Path.Combine() has strange behavior if something is not perfect
-                    Environment.CurrentDirectory.TrimEnd('\\'),
-                    DEFAULT_CSV_FILEPATH_RELATIVE.TrimStart('\\', '.'));
-
-                try
-                {
-                    // Just for demonstration: This time using extension method
-                    // which does not require explicit type conversion since it's a generic method:
-                    /// <see cref="ServiceProviderServiceExtensions.GetRequiredService{T}(IServiceProvider)"/>
-
-                    // Note: This works only if we registered this service as single instance!
-                    var dataSource = _serviceProvider.GetRequiredService<IPersonDataSource>();
-
-                    if (dataSource is IExcelPersonDataSource excelSource)
-                    {
-                        // Skip opening dialog for fast testing purposes (everything should be configurable)
-                        selectedFilePath = showFileDialog ?
-                                                _fileDlgService.OpenFile("CSV Files|*.csv|" +
-                                                                        "Excel Worksheets (*.xls, *.xlsx)|*.xls;*.xlsx", initialFilePath)
-                                                : initialFilePath;
-
-                        if (!string.IsNullOrWhiteSpace(selectedFilePath) && Path.Exists(selectedFilePath))
-                        {
-                            // File path for Excel reader
-                            excelSource.ExcelFilePath = selectedFilePath;
-                            // File path for this view model to show in view
-                            this.ExcelFilePath = selectedFilePath;
-                        }
-                    }
-                    else
-                    {
-                        selectedFilePath = null;
-                    }
-                }
-                catch (Exception ex)
-                {
-
-                    string errMsg = $"Error on opening {nameof(Microsoft.Win32.OpenFileDialog)} for CSV/Excel: {ex}";
-                    Trace.TraceError($"[{Environment.CurrentManagedThreadId:000}]: {errMsg}");
-
-                    try
-                    {
-                        // Try at least to enable button again for next time (we are not in UI thread here).
-                        await Dispatcher.CurrentDispatcher.InvokeAsync(() =>
-                        {
-                            this.CanLoadData = true;
-                            this.ErrorText = errMsg;
-                        }, DispatcherPriority.DataBind);
-                    }
-                    catch
-                    {
-                        Trace.TraceError($"[{Environment.CurrentManagedThreadId:000}]: Error on Dispatcher Invoke: {ex}");
-                    }
-
-                    return;
-                }
+                this.CanLoadData = true;
+                return;
             }
-            else
-            {
-                selectedFilePath = null;
-            }
-
-            // put to separate task for error evaluation
-            //Task<IEnumerable<PersonEntity>> fetchPeopleTask = _dpContext.GetAllPersonsAsync();
-
-            //await Task.Factory.StartNew(async () =>
-            //{
 
             List<PersonEntity>? people;
             Exception? fetchPeopleListException;
@@ -272,13 +232,12 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
                 return;
             }
 
-            // Call Invoke() or InvokeAsync() to ensure that the code runs on the UI thread.
+            // Call InvokeAsync() to ensure that the code inside this callback delegate runs on the UI thread.
             // Attention: This is a blocking call, so be careful with long running tasks.
 
             // !!! ATTENTION !!!
-            // Call it for whole operation and not after each iteration
+            // Call it for whole operation once and not after each iteration
             // since this causes too many Calling Context redirections and thus heavy loss of performance!
-
             try
             {
                 Trace.TraceInformation($"[{Environment.CurrentManagedThreadId:000}]: Dispatcher.CurrentDispatcher.InvokeAsync...");
@@ -344,6 +303,8 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
         /// <param name="people"></param>
         public void UpdatePeopleList(IEnumerable<PersonEntity> people)
         {
+            this.CanLoadData = false;
+
             this.ResetPeopleFillListProperties();
 
             foreach (var person in people)
@@ -370,99 +331,136 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
             this.CanLoadData = true;
         }
 
-        private void ResetPeopleFillListProperties()
+        public void ResetPeopleFillListProperties()
         {
-            this.CanLoadData = false;
             this.Countries.Clear();
             this.Persons.Clear();
         }
 
-        public void SortByNameToggle()
+        /// <summary>
+        /// Sorts the <see cref="PersonsView"/> of underlying <see cref="Persons"/>
+        /// by given name and given order.
+        /// </summary>
+        /// <param name="propertyName"></param>
+        /// <param name="sortOrder">if null, all sortings will be removed.</param>
+        public void SortByPropertyNameToggle(string propertyName, ListSortDirection? sortOrder)
         {
-            if (PersonsView == null)
+            if (this.PersonsView == null)
             {
                 return;
             }
 
-            SortDescription? nameSorting = PersonsView.SortDescriptions.FirstOrDefault(s => s.PropertyName == nameof(PersonEntity.Name));
+            SortDescription? sortingByPropertyName;
 
-            using (this.PersonsView?.DeferRefresh())
+            switch (propertyName)
             {
-                if (nameSorting.HasValue)
-                {
-                    // Remove only affected sorter but not any other since we are able to sort by multiple properties ".ThenBy(...)". 
-                    /// <seealso cref="Enumerable.ThenByDescending{TSource, TKey}(IOrderedEnumerable{TSource}, Func{TSource, TKey}, IComparer{TKey}?)"/>
-                    PersonsView?.SortDescriptions.Remove(nameSorting.Value);
-                }
+                case nameof(PersonEntity.Name):
+                    sortingByPropertyName = this.PersonsView.SortDescriptions.FirstOrDefault(s => s.PropertyName == nameof(PersonEntity.Name));
+                    break;
 
-                if (nameSorting == null || nameSorting.GetValueOrDefault().Direction == ListSortDirection.Descending)
+                case nameof(PersonEntity.Country):
+                    sortingByPropertyName = this.PersonsView.SortDescriptions.FirstOrDefault(s => s.PropertyName == nameof(PersonEntity.Country));
+                    break;
+
+                // add more properties in future here if needed
+
+                default:
+                    sortingByPropertyName = null;
+                    break;
+            }
+
+            if (sortingByPropertyName == null)
+            {
+                return;
+            }
+
+            using (this.PersonsView.DeferRefresh())
+            {
+                // at first remove all existing sort descriptions anyway
+                // Remove only affected sorter but not any other since we are able to sort by multiple properties ".ThenBy(...)". 
+                /// <seealso cref="Enumerable.ThenByDescending{TSource, TKey}(IOrderedEnumerable{TSource}, Func{TSource, TKey}, IComparer{TKey}?)"/>
+                this.PersonsView?.SortDescriptions.Remove(sortingByPropertyName.Value);
+
+                switch (sortOrder)
                 {
-                    // if never sorted or currently sorted descending, sort ascending
-                    PersonsView.SortDescriptions.Add(new SortDescription(nameof(PersonEntity.Name), ListSortDirection.Ascending));
-                }
-                else
-                {
-                    // if currently sorted ascending, sort descending
-                    PersonsView?.SortDescriptions.Add(new SortDescription(nameof(PersonEntity.Name), ListSortDirection.Descending));
+                    case ListSortDirection.Ascending:
+                        // if never sorted or currently sorted descending, sort ascending
+                        this.PersonsView?.SortDescriptions.Add(new SortDescription(propertyName, ListSortDirection.Ascending));
+                        break;
+                    case ListSortDirection.Descending:
+                        // if currently sorted ascending, sort descending
+                        this.PersonsView?.SortDescriptions.Add(new SortDescription(propertyName, ListSortDirection.Descending));
+                        break;
+                    default:
+                        // Do nothing, we already removed affected sort description before
+                        break;
                 }
             }
 
             this.PersonsView?.Refresh();
         }
 
-        public void SortByCountryToggle()
+        public void FilterByCountry(string selectedCountry)
         {
-            if (PersonsView == null)
-            {
-                return;
-            }
-
-            SortDescription? countrySorting = PersonsView.SortDescriptions.FirstOrDefault(s => s.PropertyName == nameof(PersonEntity.Country));
-
             using (this.PersonsView?.DeferRefresh())
             {
-                if (countrySorting.HasValue)
-                {
-                    // Remove only affected sorter but not any other since we are able to sort by multiple properties ".ThenBy(...)". 
-                    /// <seealso cref="Enumerable.ThenByDescending{TSource, TKey}(IOrderedEnumerable{TSource}, Func{TSource, TKey}, IComparer{TKey}?)"/>
-                    PersonsView?.SortDescriptions.Remove(countrySorting.Value);
-                }
-
-                if (countrySorting == null || countrySorting.GetValueOrDefault().Direction == ListSortDirection.Descending)
-                {
-                    // if never sorted or currently sorted descending, sort ascending
-                    PersonsView?.SortDescriptions.Add(new SortDescription(nameof(PersonEntity.Country), ListSortDirection.Ascending));
-                }
-                else
-                {
-                    // if currently sorted ascending, sort descending
-                    PersonsView?.SortDescriptions.Add(new SortDescription(nameof(PersonEntity.Country), ListSortDirection.Descending));
-                }
-            }
-
-            this.PersonsView?.Refresh();
-        }
-
-        public void FilterByCountry(string country)
-        {
-            // ToDo: Comment in if working
-            using (this.PersonsView?.DeferRefresh())
-            {
-                if (PersonsView == null)
+                if (this.PersonsView == null)
                 {
                     return;
                 }
 
-                if (string.IsNullOrEmpty(country))
+                // if empty or all countries selected, don't filter out anything
+                if (string.IsNullOrWhiteSpace(selectedCountry)
+                    || string.Equals(selectedCountry, Constants.FilterConstants.ALL_COUNTRIES, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    PersonsView.Filter = null;
+                    this.PersonsView.Filter = null;
                 }
                 else
                 {
-                    PersonsView.Filter = o => ((PersonEntity)o).Country == country;
+                    this.PersonsView.Filter = obj =>
+                    {
+                        // don't filter out, if:
+                        // 1. Our object is not of type PersonEntity for some reason
+                        if (obj is not PersonEntity person)
+                        {
+                            return true;
+                        }
+
+                        // 2. country was null, empty or whitespace
+                        // (show this person to user and let him know that his/her country was empty in CSV or Excel
+                        if (string.IsNullOrWhiteSpace(person.Country))
+                        {
+                            return true;
+                        }
+
+                        // if everything is OK, filter by country without heavy string comparison performance loss
+                        return string.Equals(person.Country, selectedCountry, StringComparison.InvariantCultureIgnoreCase);
+                    };
                 }
             }
             PersonsView.Refresh();
         }
+
+
+        #region Only for some manual tests or showing design data
+
+        public void FillDesignData()
+        {
+            if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
+            {
+                this.ErrorText = "Only for test in Design mode: Test-Error.";
+            }
+
+            UpdatePeopleList(TestDataProvider.GetTestPeople(50));
+
+            this.CanLoadData = true;
+        }
+
+        internal async Task ReadCsvFile()
+        {
+            await LoadPersons(showFileDialog: false);
+        }
+
+        #endregion
     }
 }

@@ -21,6 +21,9 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.Entities
             }
         }
 
+        // ToDo: If this entity type editable, add all the other OnPropertyChanged()
+        // (and add full getter and setter before)
+
         public string? Country { get; set; }
 
         public string? Phone { get; set; }

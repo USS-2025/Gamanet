@@ -1,6 +1,7 @@
 ﻿// If set, (Web) Application hosting with all its nice features will be used like in an ASP.NET app by default
 
 using Gamanet.C4.Client.Panels.DemoPanel.Entities;
+using Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Constants;
 using Microsoft.Extensions.DependencyInjection;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -15,7 +16,7 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
     /// </summary>
     public partial class MainPanel : UserControl
     {
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceProvider? _serviceProvider;
         private MainPanelViewModel? _model;
 
         public MainPanel()
@@ -28,9 +29,9 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
             _serviceProvider = App.ServiceProvider;
         }
 
-        private async void MainPanel_Loaded(object sender, RoutedEventArgs e)
+        private void MainPanel_Loaded(object sender, RoutedEventArgs e)
         {
-            var modelToAttach = _serviceProvider.GetRequiredService<MainPanelViewModel>();
+            var modelToAttach = _serviceProvider?.GetRequiredService<MainPanelViewModel>() ?? new MainPanelViewModel();
             _model = modelToAttach;
 
             string infoMsg = $"{nameof(MainPanel_Loaded)}:" +
@@ -39,13 +40,14 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
 
             // Set it only once per MainPanel to have only one instance per MainPanel.
             // Getting model instance per service provider will cause constructor DI to work.
-            //this.RootContainer.DataContext = _model = _serviceProvider.GetRequiredService<MainPanelViewModel>();
 
             // Furthermore, we have to ensure that no later data context change will override this data context
             // since data context will be derived from main window
+
+            //this.RootContainer.DataContext = _model = _serviceProvider.GetRequiredService<MainPanelViewModel>();
             this.DataContext = modelToAttach;
 
-            infoMsg = $"{nameof(MainPanel_DataContextChanged)}: Attached {modelToAttach} to {nameof(DataContext)} of {nameof(MainPanel)}.";
+            infoMsg = $"{nameof(MainPanel_Loaded)}: Attached {modelToAttach} to {nameof(DataContext)} of {nameof(MainPanel)}.";
             Trace.TraceInformation(infoMsg);
 
             if (this.DataContext is MainPanelViewModel model)
@@ -73,8 +75,7 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
             {
                 // This could happen if parent's data context changed (MainWindow, 
                 // so change it back to the model we want to use
-                //var modelToAttach = _serviceProvider.GetRequiredService<MainPanelViewModel>();
-                var modelToAttach = new MainPanelViewModel();
+                var modelToAttach = _serviceProvider?.GetRequiredService<MainPanelViewModel>() ?? new MainPanelViewModel();
                 _model = modelToAttach;
 
                 Trace.TraceInformation($"{nameof(MainPanel_DataContextChanged)}:" +
@@ -122,23 +123,35 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
 
         }
 
-        private void CheckBox_Checked(object sender, RoutedEventArgs e)
+        private void CheckBoxSort_Click(object sender, RoutedEventArgs e)
         {
             if (_model == null)
             {
                 return;
             }
 
+            if (sender is not CheckBox checkBox)
+            {
+                return;
+            }
+
+            ListSortDirection? sortOrder = checkBox.IsChecked switch
+            {
+                true => (ListSortDirection?)ListSortDirection.Ascending,
+                false => (ListSortDirection?)ListSortDirection.Descending,
+                _ => null,// Default sort order: None (original from CSV)
+            };
+
             switch (sender)
             {
                 case CheckBox _ when ReferenceEquals(sender, this.CheckboxSortByName):
                     // Sort by name
-                    _model.SortByNameToggle();
+                    _model.SortByPropertyNameToggle(nameof(PersonEntity.Name), sortOrder);
                     break;
 
-                case CheckBox _ when ReferenceEquals(sender, this.CheckboxSortByName):
+                case CheckBox _ when ReferenceEquals(sender, this.CheckboxSortByCountry):
                     // Sort by name
-                    _model.SortByNameToggle();
+                    _model.SortByPropertyNameToggle(nameof(PersonEntity.Country), sortOrder);
                     break;
 
                 case Control control:
@@ -155,27 +168,53 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
             }
         }
 
-        private void SelectFileButton_Click(object sender, RoutedEventArgs e)
+        private async void SelectFileButton_Click(object sender, RoutedEventArgs e)
         {
             if (_model == null)
             {
                 return;
             }
 
-            _model.LoadPersons(showFileDialog: true);
-            //await _model.LoadPersons();
+            await _model.LoadPersons(showFileDialog: true);
+        }
 
-            // ComboBox not showing anything will confuse the user
-            if (this.CountryFilterCombo.SelectedItem == null
-                && this.CountryFilterCombo.Items.Count > 0)
+        private void SetFilterByCountryInitialToAllCountries()
+        {
+            if (this.CountryFilterCombo.Items.Count > 0)
             {
                 this.CountryFilterCombo.SelectedIndex = 0;
+                // Yes, select "all countries" should always be the first item and not on 76. place :-)
+                this.CountryFilterCombo.SelectedItem = FilterConstants.ALL_COUNTRIES;
+                this.CountryFilterCombo.SelectedValue = FilterConstants.ALL_COUNTRIES;
+            }
+        }
+
+        #region Only for some manual tests
+
+        private void Button_ClearLists_Click(object sender, RoutedEventArgs e)
+        {
+            if (ToDoRemoveAfterTestItemsControl.DataContext is MainPanelViewModel panelModel)
+            {
+                panelModel.ResetPeopleFillListProperties();
             }
         }
 
         private void ButtonTestInVM_Click(object sender, RoutedEventArgs e)
         {
+            if (ToDoRemoveAfterTestItemsControl.DataContext is MainPanelViewModel panelModel)
+            {
+                panelModel.FillDesignData();
+                SetFilterByCountryInitialToAllCountries();
+            }
+        }
 
+        private async void ButtonLoadCsv_Click(object sender, RoutedEventArgs e)
+        {
+            if (ToDoRemoveAfterTestItemsControl.DataContext is MainPanelViewModel panelModel)
+            {
+                await panelModel.ReadCsvFile();
+                SetFilterByCountryInitialToAllCountries();
+            }
         }
 
         private void ButtonTestInCodeBehind_Click(object sender, RoutedEventArgs e)
@@ -191,12 +230,15 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows.Panel
 
                 persCollection.Clear();
 
-                Random r = new Random();
-                for (int i = 0; i < 10; i++)
+                foreach (var person in (List<PersonEntity>)[.. TestDataProvider.GetRandomPeople(10)])
                 {
-                    persCollection.Add(new PersonEntity { Name = $"Name {r.Next(100):000}" });
+                    persCollection.Add(person);
                 }
+                SetFilterByCountryInitialToAllCountries();
             }
         }
+
+        #endregion
+
     }
 }

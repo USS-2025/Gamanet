@@ -4,12 +4,15 @@ using MiniExcelLibs;
 
 public class PersonDto
 {
-    public string name { get; set; }
-    public string country { get; set; }
-    public string address { get; set; }
-    public string postalZip { get; set; }
-    public string email { get; set; }
-    public string phone { get; set; }
+#pragma warning disable IDE1006
+    public string? name { get; set; }
+    public string? country { get; set; }
+    public string? address { get; set; }
+    public string? postalZip { get; set; }
+    public string? email { get; set; }
+    public string? phone { get; set; }
+
+#pragma warning disable IDE1006
 }
 
 

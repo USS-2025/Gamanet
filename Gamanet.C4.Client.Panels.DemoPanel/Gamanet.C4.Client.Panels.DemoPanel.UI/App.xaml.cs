@@ -22,7 +22,7 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows
     /// </summary>
     public partial class App : Application
     {
-        public static IServiceProvider ServiceProvider { get; private set; }
+        public static IServiceProvider? ServiceProvider { get; private set; }
 
 #if USE_APP_HOSTING
         public static IHost AppHost { get; private set; }
@@ -30,8 +30,8 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows
 
         static App()
         {
-            AppDomain.CurrentDomain.UnhandledException += (s, e) => LogException("Current App Domain", s, e.ExceptionObject as Exception); ;
-            TaskScheduler.UnobservedTaskException += (s, e) => LogException("Task Scheduler", s, e.Exception); ;
+            AppDomain.CurrentDomain.UnhandledException += (s, e) => LogException("Current App Domain", s, e.ExceptionObject as Exception);
+            TaskScheduler.UnobservedTaskException += (s, e) => LogException("Task Scheduler", s, e.Exception);
 
 #if USE_APP_HOSTING
 
@@ -60,8 +60,8 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows
             this.DispatcherUnhandledException += (s, e) => LogException("Dispatcher", s, e.Exception);
         }
 
-        private static void LogException(string source, object sender, Exception? ex)
-            => Trace.TraceError($"Source: {source}; Sender: {sender}; Exception: {ex?.Message}", ex);
+        private static void LogException(string source, object? sender, Exception? ex)
+            => Trace.TraceError($"Source: {source}; Sender: {sender ?? "null"}; Exception: {ex?.Message}", ex);
 
         private static void ConfigureServices(IServiceCollection services)
         {
@@ -87,6 +87,7 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows
             // but not for MainPanelViewModel since the sense of a UserControl
             // re-using multiple times und thus multi-instantiating of it's view model
             // Data context of UserControl is being attached to
+
             //services.AddSingleton<MainPanelViewModel>();
         }
 

@@ -2,6 +2,6 @@
 {
     public interface IExcelPersonDataSource: IPersonDataSource
     {
-        public string ExcelFilePath { get; set; }
+        public string? ExcelFilePath { get; set; }
     }
 }

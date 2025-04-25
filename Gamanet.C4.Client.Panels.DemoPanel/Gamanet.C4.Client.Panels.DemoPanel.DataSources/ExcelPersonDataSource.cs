@@ -17,17 +17,11 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.DataSources
 
         private const string DEFAULT_CSV_FILEPATH_RELATIVE = @".\Assets\TestData\PersonsDemo.csv";
 
-        private readonly IMapper _mapper;
-        public string ExcelFilePath { get; set; }
+        public string? ExcelFilePath { get; set; }
 
         public ExcelPersonDataSource()
         {
             this.ExcelFilePath = DEFAULT_CSV_FILEPATH_RELATIVE;
-        }
-        public ExcelPersonDataSource(IMapper mapper)
-            : this()
-        {
-            _mapper = mapper;
         }
 
         public async Task<IEnumerable<PersonEntity>> LoadPersonsAsync()
@@ -55,7 +49,11 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.DataSources
 
             IEnumerable<PersonDto> dtoList = await MiniExcel.QueryAsync<PersonDto>(testPath, sheetName: "PersonsDemo", excelType);
 
-            List<PersonEntity> peopleList = new List<PersonEntity>(dtoList.Count());
+            // Only for a later test: simulate long work here to test reaction of UI
+            /// await Task.Delay(5000);
+            ///////////////////////////////////////////////////////////////////
+
+            List<PersonEntity> peopleList = new(dtoList.Count());
 
             // Configure AutoMapper
             var configuration = new MapperConfiguration(cfg =>

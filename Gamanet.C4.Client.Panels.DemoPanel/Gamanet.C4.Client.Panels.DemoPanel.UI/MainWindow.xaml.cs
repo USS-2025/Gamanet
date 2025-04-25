@@ -10,7 +10,7 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceProvider? _serviceProvider;
         private MainWindowViewModel? _model;
 
         public MainWindow()
@@ -25,19 +25,19 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            var modelToAttach = _serviceProvider.GetRequiredService<MainWindowViewModel>();
+            var modelToAttach = _serviceProvider?.GetRequiredService<MainWindowViewModel>() ?? new MainWindowViewModel();
             _model = modelToAttach;
 
-            Trace.TraceInformation($"{nameof(MainWindow_Loaded)}:" +
-                $" Attaching {modelToAttach} to {nameof(DataContext)} of {nameof(MainPanel)}...");
+            string infoMsg = $"{nameof(MainWindow_Loaded)}:" +
+                $" Attaching {modelToAttach} to {nameof(DataContext)} of {nameof(MainPanel)}...";
+            Trace.TraceInformation(infoMsg);
 
             // Set it only once per MainPanel to have only one instance per MainPanel
             // Getting model instance per service provider will cause constructor DI to work.
             //this.RootContainer.DataContext = _model = _serviceProvider.GetRequiredService<MainWindowViewModel>();
             this.DataContext = modelToAttach;
 
-            string infoMsg = $"{nameof(MainWindow_Loaded)}: {nameof(DataContext)}=={this.DataContext ?? "null"}";
-
+            infoMsg = $"{nameof(MainWindow_Loaded)}: Attached {modelToAttach} to {nameof(DataContext)} of {nameof(MainPanel)}.";
             Trace.TraceInformation(infoMsg);
 
             if (this.DataContext is MainPanelViewModel model)
@@ -49,12 +49,31 @@ namespace Gamanet.C4.Client.Panels.DemoPanel.WPF.Windows
         private void MainWindow_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             string infoMsg = $"{nameof(MainWindow_DataContextChanged)}: {e.OldValue ?? "null"} --> {e.NewValue ?? "null"}";
-
             Trace.TraceInformation(infoMsg);
 
-            if (this.DataContext is MainPanelViewModel model)
+            if (this.DataContext is not MainWindowViewModel)
             {
-                model.StatusText = infoMsg;
+                var modelToAttach = _serviceProvider?.GetRequiredService<MainWindowViewModel>() ?? new MainWindowViewModel();
+                _model = modelToAttach;
+
+                Trace.TraceInformation($"{nameof(MainWindow_DataContextChanged)}:" +
+                    $" Attaching {modelToAttach} to {nameof(DataContext)} of {nameof(MainWindow)}...");
+
+                // Set it only once per MainPanel to have only one instance per MainPanel.
+                // Getting model instance per service provider will cause constructor DI to work.
+                //this.RootContainer.DataContext = _model = _serviceProvider.GetRequiredService<MainWindowViewModel>();
+
+                // Furthermore, we have to ensure that no later data context change will override this data context
+                // since data context will be derived from main window
+                this.DataContext = modelToAttach;
+
+                infoMsg = $"{nameof(MainWindow_DataContextChanged)}: Attached {modelToAttach} to {nameof(DataContext)} of {nameof(MainWindow)}.";
+                Trace.TraceInformation(infoMsg);
+
+                if (this.DataContext is MainWindowViewModel model)
+                {
+                    model.StatusText = infoMsg;
+                }
             }
         }
     }

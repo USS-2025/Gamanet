@@ -6,8 +6,4 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Gamanet.C4.Client.Utils\Gamanet.C4.Client.Utils.csproj" />
-  </ItemGroup>
-
 </Project>

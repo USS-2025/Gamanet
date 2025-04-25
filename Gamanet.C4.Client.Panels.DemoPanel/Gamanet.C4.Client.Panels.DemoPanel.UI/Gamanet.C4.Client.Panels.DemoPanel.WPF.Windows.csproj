@@ -35,12 +35,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Gamanet.C4.Client.Panels.DemoPanel.BusinessLogic\Gamanet.C4.Client.Panels.DemoPanel.Services.csproj" />
     <ProjectReference Include="..\Gamanet.C4.Client.Panels.DemoPanel.Contexts\Gamanet.C4.Client.Panels.DemoPanel.Contexts.csproj" />
     <ProjectReference Include="..\Gamanet.C4.Client.Panels.DemoPanel.DataSources\Gamanet.C4.Client.Panels.DemoPanel.DataSources.csproj" />
     <ProjectReference Include="..\Gamanet.C4.Client.Panels.DemoPanel.Entities\Gamanet.C4.Client.Panels.DemoPanel.Entities.csproj" />
     <ProjectReference Include="..\Gamanet.C4.Client.Panels.DemoPanel.MVVM\Gamanet.C4.Client.Panels.DemoPanel.MVVM.csproj" />
     <ProjectReference Include="..\Gamanet.C4.Client.Panels.DemoPanel.Repositories\Gamanet.C4.Client.Panels.DemoPanel.Repositories.csproj" />
+    <ProjectReference Include="..\Gamanet.C4.Client.Panels.DemoPanel.Services\Gamanet.C4.Client.Panels.DemoPanel.Services.csproj" />
     <ProjectReference Include="..\Gamanet.C4.Client.Utils\Gamanet.C4.Client.Utils.csproj" />
   </ItemGroup>
 

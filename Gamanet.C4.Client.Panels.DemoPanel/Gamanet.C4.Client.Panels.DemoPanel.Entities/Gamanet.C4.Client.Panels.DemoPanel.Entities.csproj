@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Gamanet.C4.Client.Panels.DemoPanel.MVVM\Gamanet.C4.Client.Panels.DemoPanel.MVVM.csproj" />
-    <ProjectReference Include="..\Gamanet.C4.Client.Utils\Gamanet.C4.Client.Utils.csproj" />
   </ItemGroup>
 
 </Project>
